@@ -1,10 +1,17 @@
-FROM ocelotuproar/alpine-glibc:alpine-3.4
+FROM ocelotuproar/docker-alpine-mono:4.4
 
-RUN apk add --update curl wget ca-certificates tar xz autoconf libtool pkgconf make git automake && \
-      cd /tmp && \
-      wget "https://www.archlinux.org/packages/extra/x86_64/mono/download/" -O mono.pkg.tar.xz && \
-      cd / && \
-      tar xJf /tmp/mono.pkg.tar.xz && \
-      mozroots --url http://anduin.linuxfromscratch.org/BLFS/other/certdata.txt --import --ask-remove && \
-      apk del tar xz autoconf libtool pkgconf automake && \
-      rm -rf /tmp/* /var/cache/apk/* /fsharp
+ENV FSHARP_VERSION 4.0.1.1
+
+RUN apk --no-cache add --virtual build-dependencies wget ca-certificates autoconf libtool pkgconf make automake && \
+      mkdir -p /tmp/src && \
+      cd /tmp/src && \
+      wget --progress=dot:mega https://github.com/fsharp/fsharp/archive/$FSHARP_VERSION.tar.gz && \
+      tar xzf $FSHARP_VERSION.tar.gz && \
+      cd /tmp/src/fsharp-$FSHARP_VERSION && \
+      ./autogen.sh --prefix=/usr --with-gacdir=/usr/lib/mono/gac && \
+      make && \
+      make install && \
+      cd ~ && \
+      rm -rf /tmp/src
+
+CMD ["fsharpi"]
